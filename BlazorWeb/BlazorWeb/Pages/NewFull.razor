@@ -1,0 +1,206 @@
+﻿@using System.Text
+@page "/news/{id}"
+@inject dbapiContext context
+@using Microsoft.EntityFrameworkCore;
+
+
+<div class="news-card">
+    <h2 class="news-title">@block?.Title</h2>
+    <div class="news-date">@block?.CreatedAt</div>
+    <hr />
+    
+    
+    <div class="news-text">
+        @if (block != null)
+        {
+            foreach (var blockType in block.BlockTypes)
+            {
+                var paragraphs = blockType.TextType.Content.Split('/');
+                foreach (var paragraph in paragraphs)
+                {
+                    <p>@((MarkupString)FormatText(paragraph.Trim(), blockType.TextType))</p>
+
+                }
+
+                @if (blockType.ImageId.HasValue)
+                {
+                    <div class="news-image">
+                        <img src="@blockType.Image.ImageUrl" alt="@blockType.Image.Note" />
+                        <p class="image-caption">@blockType.Image.Note</p>
+                    </div>
+                }
+
+
+                <div class="news-video">
+                    @if (blockType.VideoId != null)
+                    {
+                        <video controls>
+                            <source src="@blockType.Video.VideoUrl" type="@blockType.Video.VideoId">
+                            Ваш браузер не поддерживает воспроизведение видео.
+                        </video>
+                    }
+                </div>
+            }
+
+        }
+    </div>
+</div>
+
+<style>
+    .news-title {
+        font-size: 2em;
+        color: rgba(48, 61, 68, 1);
+        margin-bottom: 0.1em;/* 
+        text-align: center; */
+        font-weight: bold;
+        
+    }
+
+
+    .news-date {
+        font-size: 1em;
+        color: rgba(48, 61, 68, 1);
+        margin-bottom: 0.1em;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    hr {
+        border: none; 
+        margin-bottom: 0.3em;
+        border-top: 3px solid rgba(48, 61, 68, 1);
+    }
+
+    .news-card {
+        padding: 1em;
+        margin-bottom: 1em;
+        margin-bottom: 1em;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+        color: rgba(48, 61, 68, 1);
+    }
+
+    .news-text {
+        font-size: 1.2em;
+        line-height: 1.6;
+        color: rgba(48, 61, 68, 1);
+    }
+
+    
+
+    /*фото*/
+
+    .news-image {
+        text-align: center;
+        margin-bottom: 1em;
+    }
+
+        .news-image img {
+            max-width: 70%;
+            height: auto;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+    .image-caption {
+        margin-top: 0.5em;
+    }
+
+    /*видео*/
+    .news-video {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        margin-bottom: 1em;
+    }
+
+        .news-video video {
+            width: 100%;
+            height: auto;
+            max-width: 800px;
+            max-height: auto;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+    .video-caption {
+        margin-top: 0.5em;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    private Block block;
+    private Image image;
+    private Video video;
+    private TextType text;
+    private BlockType blockType;
+
+    protected override async Task OnInitializedAsync()
+    {
+        block = await context.Blocks
+            .Include(b => b.BlockTypes)
+                .ThenInclude(bt => bt.TextType)
+            .Include(b => b.BlockTypes)
+                .ThenInclude(bt => bt.Video)
+            .Include(b => b.BlockTypes)
+                .ThenInclude(bt => bt.Image)
+            .FirstOrDefaultAsync(b => b.BlockId == int.Parse(Id));
+
+
+        if (block != null)
+        {
+            image = block.Images.FirstOrDefault(img => img.BlockId == block.BlockId);
+            video = block.Videos.FirstOrDefault(vid => vid.BlockId == block.BlockId);
+        }
+    }
+    public string FormatText(string text, TextType textType)
+    {
+        if (textType == null)
+        {
+            return text; // Если textType null, возвращаем текст без изменений
+        }
+
+        StringBuilder formattedText = new StringBuilder();
+
+        if (textType.Bold == true)
+            formattedText.Append("<strong>");
+        if (textType.Italic == true)
+            formattedText.Append("<em>");
+        if (textType.Strikethrough == true)
+            formattedText.Append("<del>");
+        if (textType.Underline == true)
+            formattedText.Append("<u>");
+        if (textType.Code == true)
+            formattedText.Append("<code>");
+        if (!string.IsNullOrEmpty(textType.Color))
+            formattedText.AppendFormat("<span style=\"color:{0};\">", textType.Color);
+        if (!string.IsNullOrEmpty(textType.Href))
+            formattedText.AppendFormat("<a href=\"{0}\">", textType.Href);
+
+        // Экранирование специальных символов для безопасного использования в HTML
+        formattedText.Append(System.Net.WebUtility.HtmlEncode(text));
+
+        if (!string.IsNullOrEmpty(textType.Href))
+            formattedText.Append("</a>");
+        if (!string.IsNullOrEmpty(textType.Color))
+            formattedText.Append("</span>");
+        if (textType.Code == true)
+            formattedText.Append("</code>");
+        if (textType.Underline == true)
+            formattedText.Append("</u>");
+        if (textType.Strikethrough == true)
+            formattedText.Append("</del>");
+        if (textType.Italic == true)
+            formattedText.Append("</em>");
+        if (textType.Bold == true)
+            formattedText.Append("</strong>");
+
+        return formattedText.ToString();
+    }
+}

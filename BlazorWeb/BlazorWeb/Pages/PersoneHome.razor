@@ -1,0 +1,195 @@
+﻿@page "/person"
+@inject UserService UserService 
+@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
+@inject dbapiContext context
+@using Microsoft.EntityFrameworkCore;
+@using System.Threading.Tasks;
+
+<div class="person">
+    <div class="header"> 
+        <h4>Личный кабинет</h4>
+    </div>
+    <div class="info">
+        
+        @if (user != null)
+        {
+            
+            <div class="icon">
+                <p class="initial">@user.Username.Substring(0, 1)</p>
+            </div>
+
+            <div class="name">
+                <h3>@user.Username</h3>
+                <span class="id"> 
+                    <h4>ID: @user.UserId</h4> 
+                </span>
+            </div>
+
+            <div class="role">
+                <h4>Роль: @role.RoleName</h4>
+                <h4>Почта: @user.Email</h4>
+            </div>
+        }
+    </div>
+
+    @if (user != null && user.RoleId == 1)
+    {
+        <div class="header">
+            <h4> Панель администратора</h4>
+        </div>
+        <div class="admin">
+            <div class="users">
+                <button class="but" @onclick="NavigateToUsersList">Список пользователей</button>
+                <button class="but" @onclick="NavigateToRoleList">Список ролей</button>
+            </div>
+        </div>
+    }
+
+</div>
+
+<style>
+
+.header {
+    font-weight: bold;
+    color:  rgba(48, 61, 68, 1);
+    font-weight:600;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    text-align:center;
+}
+.person {
+    cursor: pointer;
+    padding: 15px;
+    border-radius: 15px;
+    background-color: rgba(139, 149, 150, 0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    flex: 0 1 300px;
+    width: 100%;
+    max-width: 700px;
+    height: auto;
+    margin: auto auto;
+    margin-top: 80px;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-content: center;
+    align-items: center;
+    justify-content: center;
+    color: rgba(48, 61, 68, 1)
+}
+
+.info {
+    border: solid;
+    border-color: rgba(126, 137, 138, 1);
+    border-radius: 15px;
+    padding: 15px;
+    width: 100%;
+    font-size: 1.2em;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-content: center;
+    align-items: center;
+ }
+
+.icon {
+    background-color: hsl(263,65.3%,19.2%);
+    border-radius: 50px;
+    height: 100px;
+    width: 100px;
+    font-weight: bold;
+    font-size:1.5em;
+    color: white;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;  
+    justify-content: center;
+    align-items: center; 
+}
+
+.p {
+    margin-top: 0;
+    margin-bottom: -1rem;
+}
+
+.name {
+    padding-left:30px;
+    display:flex;
+    flex-direction: column;
+    align-items: flex-start;
+
+}
+
+.role {
+    padding-left: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.but {
+    max-width: 635px;
+    width: 100%;
+    height: 50px;
+    background: hsl(234,61.7%,22.5%);
+    color: white;
+    border-radius: 5px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.admin{
+    border: solid;
+    border-color: rgba(126, 137, 138, 1);
+    border-radius: 15px;
+    padding: 15px;
+    width: 100%;
+    font-size: 1.2em;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+}
+</style>
+
+@code {
+
+    List<User> users = new List<User>();
+    User user;
+    List<Role> roles = new List<Role>();
+    Role role;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (UserService.UserId == 0)
+        {
+            NavigationManager.NavigateTo("/signin");
+            return;
+        }
+
+        user = await context.Users.FirstOrDefaultAsync(u => u.UserId == UserService.UserId);
+        if (user == null)
+        {
+            Console.WriteLine("Пользователь не найден");
+            return;
+        }
+        else
+        {
+            Console.WriteLine($"Найден пользователь с id {user.UserId}");
+        }
+
+        role = await context.Roles.FirstOrDefaultAsync(r => r.RoleId == user.RoleId);
+    }
+
+    private void NavigateToUsersList()
+    {
+        NavigationManager.NavigateTo("users-list");
+    }
+    private void NavigateToRoleList()
+    {
+        NavigationManager.NavigateTo("role-list");
+    }
+}
+
+   

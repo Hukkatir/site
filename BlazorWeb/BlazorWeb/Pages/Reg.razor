@@ -1,0 +1,134 @@
+﻿@page "/signup"
+@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
+@inject dbapiContext context
+@using Microsoft.EntityFrameworkCore;
+@using System.Threading.Tasks;
+@inject UserService UserService
+
+<link href="css/site.css" rel="stylesheet" />
+
+<div class="signup">
+    <h3>Регистрация</h3>
+    <div style="margin-bottom: 10px;">
+        <h6>Имя пользователя:</h6>
+        <input type="text" class="form-control" placeholder="Введите имя пользователя" @bind-value="Username" />
+    </div>
+
+    <div style="margin-bottom: 10px;">
+        <h6>Email:</h6>
+        <input type="email" class="form-control" placeholder="Введите почту" @bind-value="Email" />
+    </div>
+
+    <div style="margin-bottom: 10px;">
+        <h6>Пароль: </h6>
+        <input type="password" class="form-control" placeholder="Введите пароль" @bind-value="Password" />
+    </div>
+
+    <button class="btn-primary" @onclick="Register">Зарегистрироваться</button>
+
+    <div class="reg">
+        <p>Уже есть аккаунт?  <a href="/signin" target="_blank">Войти</a> </p>
+    </div>
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div style="margin-top: 10px;" class="alert alert-danger">@ErrorMessage</div>
+    }
+
+</div>
+
+<style>
+    .signup {
+        cursor: pointer;
+        padding: 15px;
+        border-radius: 15px;
+        background-color: rgba(139, 149, 150, 0.1);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        flex: 0 1 300px;
+        width: 100%;
+        max-width: 350px;
+        margin: auto auto;
+        margin-top: 10%;
+        display: flex;
+        flex-direction: column;
+        flex-wrap: nowrap;
+        align-items: stretch;
+        max-height: 370px;
+       
+    }
+
+    .form-control {
+        border-radius: 5px;
+        background-color: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-primary {
+        border-radius: 3px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        background: rgba(48, 61, 68, 1);
+        color: white;
+        width: 100%;
+        margin-top: 15px;
+        margin-bottom: 10px;
+    }
+
+    .alert {
+        margin: 10px auto;
+        max-width: 300px;
+    }
+
+    h3 {
+        text-align: center;
+        
+</style>
+
+@code {
+    private string Username { get; set; }
+    private string Email { get; set; }
+    private string Password { get; set; }
+    private string ErrorMessage { get; set; }
+
+
+    private async Task Register()
+    {
+        if (string.IsNullOrEmpty(Username) || string.IsNullOrEmpty(Email) || string.IsNullOrEmpty(Password))
+        {
+            ErrorMessage = "Все поля должны быть заполнены.";
+            return;
+        }
+
+        var existingUserWithUsername = await context.Users.FirstOrDefaultAsync(u => u.Username == Username);
+        if (existingUserWithUsername != null)
+        {
+            ErrorMessage = "Пользователь с таким именем уже существует.";
+            return;
+        }
+
+        var existingUser = await context.Users.FirstOrDefaultAsync(u => u.Email == Email);
+        if (existingUser != null)
+        {
+            ErrorMessage = "Пользователь с таким email уже существует.";
+            return;
+        }
+
+        User user = new User()
+            {
+                Username = Username,
+                Email = Email,
+                UserPassword = Password,
+                CreatedAt = DateTime.Now,
+                RoleId = 3
+
+            };
+
+        context.Users.Add(user);
+        context.SaveChanges();
+        NavigationManager.NavigateTo("/signin");
+       
+    }
+}

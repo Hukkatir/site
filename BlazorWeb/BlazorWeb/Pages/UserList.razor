@@ -1,0 +1,67 @@
+﻿@page "/users-list"
+@inject dbapiContext context
+@using Microsoft.EntityFrameworkCore;
+
+<h2>Пользователи</h2>
+<hr/>
+<div class="user-list">
+    @foreach (var user in users)
+    {
+        <div class="user-card">
+            <h5> UserId: @user.UserId</h5>
+            <h5> RoleId: @user.RoleId</h5>
+            <h5> Username: @user.Username</h5>
+            <h5> Password: @user.UserPassword</h5>
+            <h5> Email: @user.Email</h5>
+            <h5> CreatedBy: @user.CreatedBy</h5>
+            <h5> DeletedBy: @user.DeletedBy</h5>
+            <h5> CreatedAt: @user.CreatedAt</h5>
+            <h5> DeletedAt: @user.DeletedAt</h5>
+        </div>
+    }
+</div>
+
+<style>
+    .user-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin: auto auto;
+
+    }
+
+    .user-card {
+        cursor: pointer;
+        padding: 10px;
+        border-radius: 15px;
+        background-color: rgba(139, 149, 150, 0.1);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        flex: 1 1 300px; 
+        
+    }
+    h2 {
+        text-align:center;
+        color: rgba(48, 61, 68, 1);
+        font-weight: bold;
+
+    }
+    h5 {
+        color: rgba(48, 61, 68, 1);
+    }
+
+    hr {
+        border: none;
+        margin-bottom: 2em;
+        border-top: 3px solid rgba(48, 61, 68, 1);
+    }
+   
+</style>
+
+@code {
+    private List<User> users = new List<User>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        users = await context.Users.ToListAsync();
+    }
+}

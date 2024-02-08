@@ -1,0 +1,63 @@
+﻿@page "/role-list"
+@inject dbapiContext context
+@using Microsoft.EntityFrameworkCore;
+
+<h2>Роли</h2>
+<hr />
+<div class="role-list">
+    @foreach (var role in roles)
+    {
+        <div class="role-card">
+            <h5> RoleId: @role.RoleId</h5>
+            <h5> RoleName: @role.RoleName</h5>
+            <h5> Description: @role.Descrip</h5>
+            <h5> CreatedBy: @role.CreatedBy</h5>
+            <h5> DeletedBy: @role.DeletedBy</h5>
+            <h5> CreatedAt: @role.CreatedAt</h5>
+            <h5> DeletedAt: @role.DeletedAt</h5>
+        </div>
+    }
+</div>
+
+<style>
+    .role-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin: auto auto;
+    }
+
+    .role-card {
+        cursor: pointer;
+        padding: 10px;
+        border-radius: 15px;
+        background-color: rgba(139, 149, 150, 0.1);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        flex: 1 1 300px;
+    }
+
+    h2 {
+        text-align: center;
+        color: rgba(48, 61, 68, 1);
+        font-weight: bold;
+    }
+
+    h5 {
+        color: rgba(48, 61, 68, 1);
+    }
+
+    hr {
+        border: none;
+        margin-bottom: 2em;
+        border-top: 3px solid rgba(48, 61, 68, 1);
+    }
+</style>
+
+@code {
+    private List<Role> roles = new List<Role>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        roles = await context.Roles.ToListAsync();
+    }
+}
